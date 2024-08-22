@@ -64,27 +64,27 @@ Commands
 Rpn currently knows the following commands:
 
 Commands:
-`d`: dump stack
-`p`: pop and print top of stack ("P" displays raw values)
-`t`: print type of top of stack
-`+`: add last two stack values, push result to stack
-`-`: subtract last stack values from the one before, push result to stack
-`*`: multiply last two stack values, push result to stack
-`/`: divide last stack value by the one before, push result to stack
-`!`: negate value at top of stack (0=false)
-`.`: duplicate top of stack
-`_`: pop and discard top of stack
-`e`: pop and execute top of stack
-`x`: clear stack
-`q`: quit
+* `d`: dump stack
+* `p`: pop and print top of stack ("P" displays raw values)
+* `t`: print type of top of stack
+* `+`: add last two stack values, push result to stack
+* `-`: subtract last stack values from the one before, push result to stack
+* `*`: multiply last two stack values, push result to stack
+* `/`: divide last stack value by the one before, push result to stack
+* `!`: negate value at top of stack (0=false)
+* `.`: duplicate top of stack
+* `_`: pop and discard top of stack
+* `e`: pop and execute top of stack
+* `x`: clear stack
+* `q`: quit
 
 All other values encountered are pushed to stack a value.  Rpn supports the
 following types:
- * integer
- * float
- * string
- * nil
+* integer
+* float
+* string
+* nil
 
 In the REPL (only) you can also run the following commands:
-`h`: show help
-`i`: toggle debug info
+* `h`: show help
+* `i`: toggle debug info
