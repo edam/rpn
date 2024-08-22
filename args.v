@@ -18,6 +18,7 @@ const options = [
 	ggetopt.opt('quiet', `q`)
 		.help('do not dump the stack on exit'),
 	ggetopt.opt_help(),
+	ggetopt.opt_version(),
 	ggetopt.text(),
 	ggetopt.text('A simple Reverse Polish Notation (RPN) calculator.  ' +
 		'Running ${ggetopt.prog()} without any arguments starts a REPL.  ' +
@@ -28,6 +29,13 @@ fn (mut a Args) process_arg(arg string, val ?string) ! {
 	match arg {
 		'help' {
 			ggetopt.print_help(options, columns: 80)
+			exit(0)
+		}
+		'version' {
+			ggetopt.print_version('0.1', [
+				'Simple Reverse Polish Notation (RPN) interpreter',
+				'Copyright 2024 Tim Marston <tim@ed.am>',
+			])
 			exit(0)
 		}
 		'commands', 'c' {
