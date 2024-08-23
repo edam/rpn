@@ -45,7 +45,11 @@ cd v
 make
 ```
 
-Note: You will need to add the V binary to the `PATH` manually.
+Note: You will need to add the V binary to the `PATH`, which can be done with:
+
+```
+./v symlink
+```
 
 Then build rpn...
 
