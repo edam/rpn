@@ -43,11 +43,6 @@ Rpn is writen in [V](http://vlang.io).  You will need to install V first.
 git clone https://github.com/vlang/v
 cd v
 make
-```
-
-Note: You will need to add the V binary to the `PATH`, which can be done with:
-
-```
 ./v symlink
 ```
 
