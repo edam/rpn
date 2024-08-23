@@ -52,7 +52,7 @@ Then build rpn...
 ``` Shell
 git clone https://github.com/edam/rpn
 cd rpn
-v install edam.ggetopt edam.greadline prantlf.pcre2
+v install
 v .
 ```
 
