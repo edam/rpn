@@ -1,9 +1,7 @@
 Reverse Polish Notation Interpreter
 ====================
 
-Simple RPN calculator/interpreter.
-
-Version 0.1
+Simple RPN calculator/interpreter, for fun.
 
 Running
 -------

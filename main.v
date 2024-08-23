@@ -3,33 +3,37 @@ module main
 import os
 
 fn main() {
-	args, rest := Args.from_cli()
+	args := Args.from_cli()
+
 	mut app := App.new()!
-	if args.run {
-		if !app.run(rest.join(' ')) {
-			app.stack.purge()
-		}
-	} else if rest.len > 0 {
-		all: for file in rest {
-			lines := os.read_lines(file)!
+
+	mut cont, mut err := true, false
+	if line := args.run {
+		cont, err = app.run(line)
+	} else if files := args.files {
+		all: for file in files {
+			lines := os.read_lines(file) or {
+				println(err.msg())
+				exit(1)
+			}
 			for i := 0; i < lines.len; i++ {
-				if !app.run(lines[i]) {
-					// can't display this, because it displays on quit!
-					// TODO: handle quit better than silent error...
-					// println('in ${file}:${i + 1}')
-					app.stack.purge()
+				cont, err = app.run(lines[i])
+				if err {
+					println('in ${file}:${i}')
+				}
+				if !cont {
 					break all
 				}
 			}
 		}
 	} else {
 		app.repl('${args.prompt}> ')!
-		app.stack.purge()
+		cont = false
 	}
-	if args.quiet {
-		app.stack.purge()
-	}
-	app.print_stack()!
 
-	// TODO exit code
+	if cont && !args.quiet {
+		app.print_stack()!
+	}
+
+	exit(if err { 1 } else { 0 })
 }

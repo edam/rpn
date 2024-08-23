@@ -7,10 +7,10 @@ import prantlf.pcre2
 const rcfile = os.join_path(os.home_dir(), '.calcrc')
 
 struct App {
-	args &Args = unsafe { nil }
+	args  &Args = unsafe { nil }
+	tokre pcre2.RegEx
 mut:
 	stack Stack
-	tokre pcre2.RegEx
 	debug bool
 }
 
@@ -20,7 +20,7 @@ fn App.new() !&App {
 		 r'[-+]?(?:[0-9]*\.)?[0-9]+(?:e[-+]?[0-9]+)?|' + // number
 		 r'"(?:\\.|[^"])*"|' + // string
 		 r'nil|' + // nil
-		 r'[^"]' + // command
+		 r'[^"]' + // any other single char (including commands)
 		 r')\s*', pcre2.opt_caseless | pcre2.opt_utf)!
 	}
 }
@@ -54,14 +54,16 @@ fn (mut app App) repl_exec(line string) ! {
 	}
 }
 
-fn (mut app App) run(line string) bool {
+fn (mut app App) run(line string) (bool, bool) {
 	app.exec_line(line) or {
-		if err.msg() != '' {
+		if err.msg() == '' {
+			return false, false
+		} else {
 			println('${err.msg()}')
+			return false, true
 		}
-		return false
 	}
-	return true
+	return true, false
 }
 
 struct Tok {

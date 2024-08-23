@@ -3,7 +3,8 @@ import edam.ggetopt
 @[heap]
 pub struct Args {
 pub mut:
-	run    bool
+	run    ?string
+	files  ?[]string
 	quiet  bool
 	prompt string
 }
@@ -39,7 +40,7 @@ fn (mut a Args) process_arg(arg string, val ?string) ! {
 			exit(0)
 		}
 		'commands', 'c' {
-			a.run = true
+			a.run = ''
 		}
 		'quiet', 'q' {
 			a.quiet = true
@@ -48,16 +49,18 @@ fn (mut a Args) process_arg(arg string, val ?string) ! {
 	}
 }
 
-fn Args.from_cli() (Args, []string) {
+fn Args.from_cli() Args {
 	mut args := Args{}
 	rest := ggetopt.getopt_long_cli(options, args.process_arg) or { ggetopt.die_hint(err) }
-	if args.run {
+	if _ := args.run {
 		if rest.len < 1 {
 			ggetopt.die('missing commands')
 		}
-	}
-	if rest.len == 0 {
+		args.run = rest.join(' ')
+	} else if rest.len > 0 {
+		args.files = rest
+	} else {
 		args.prompt = ggetopt.prog()
 	}
-	return args, rest
+	return args
 }
