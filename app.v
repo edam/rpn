@@ -11,6 +11,7 @@ struct App {
 	tokre pcre2.RegEx
 mut:
 	stack Stack
+	vars  map[string]Value
 	debug bool
 }
 
@@ -20,6 +21,7 @@ fn App.new() !&App {
 		 r'[-+]?(?:[0-9]*\.)?[0-9]+(?:e[-+]?[0-9]+)?|' + // number
 		 r'"(?:\\.|[^"])*"|' + // string
 		 r'nil|' + // nil
+		 r'[<>][A-Z]+|' + // fetch/store
 		 r'[^"]' + // any other single char (including commands)
 		 r')\s*', pcre2.opt_caseless | pcre2.opt_utf)!
 	}
@@ -89,7 +91,7 @@ fn (mut app App) exec_line(line string) ! {
 			return Err{
 				msg: err.str()
 				inp: line
-				off: tok.off
+				tok: tok
 			}
 		}
 	}
@@ -98,11 +100,12 @@ fn (mut app App) exec_line(line string) ! {
 struct Err {
 	msg string
 	inp string
-	off int
+	tok Tok
 }
 
 fn (e Err) msg() string {
-	return '${e.msg}: ' + e.inp + '\n' + ` `.repeat(e.msg.len + 2 + e.off) + '^'
+	return '${e.msg}: ' + e.inp + '\n' + ` `.repeat(e.msg.len + 2 + e.tok.off) +
+		`^`.repeat(e.tok.len)
 }
 
 fn (e Err) code() int {
@@ -117,7 +120,10 @@ fn (mut app App) next_token(inp string, off int) !(int, string) {
 		return Err{
 			msg: 'syntax error'
 			inp: inp
-			off: off
+			tok: Tok{
+				off: off
+				len: 1
+			}
 		}
 	}
 	defer {
@@ -130,42 +136,48 @@ fn (mut app App) next_token(inp string, off int) !(int, string) {
 	return end, m.group_text(inp, 1)!
 }
 
-fn (mut app App) exec(inp string) ! {
-	match inp {
-		'd' { app.print_stack()! }
-		'p' { println(app.stack.pop()!.disp()) }
-		'P' { println(app.stack.pop()!.str()) }
-		't' { println(app.stack.head()!.typ()) }
-		'e' { app.exec(app.stack.pop()!.str())! }
-		'x' { app.stack.purge() }
-		'+' { app.stack.push(app.stack.pop()!.add(app.stack.pop()!)!) }
-		'-' { app.stack.push(app.stack.pop()!.sub(app.stack.pop()!)!) }
-		'*' { app.stack.push(app.stack.pop()!.mul(app.stack.pop()!)!) }
-		'/' { app.stack.push(app.stack.pop()!.div(app.stack.pop()!)!) }
-		'!' { app.stack.push(app.stack.pop()!.neg()!) }
-		'.' { app.stack.push(app.stack.head()!) }
-		'_' { app.stack.pop()! }
-		'q' { return error('quit') }
-		else { app.stack.push(Value.parse(inp) or { return error('bad command') }) }
+fn (mut app App) exec(tok string) ! {
+	match tok[0] {
+		`+` { app.stack.push(app.stack.pop()!.add(app.stack.pop()!)!) }
+		`-` { app.stack.push(app.stack.pop()!.sub(app.stack.pop()!)!) }
+		`*` { app.stack.push(app.stack.pop()!.mul(app.stack.pop()!)!) }
+		`/` { app.stack.push(app.stack.pop()!.div(app.stack.pop()!)!) }
+		`!` { app.stack.push(app.stack.pop()!.neg()!) }
+		`>` { app.vars[tok[1..]] = app.stack.pop()! }
+		`<` { app.stack.push(app.vars[tok[1..]] or { return error('not stored') }) }
+		`.` { app.stack.push(app.stack.head()!) }
+		`s` { app.stack.swap()! }
+		`_` { app.stack.pop()! }
+		`e` { app.exec(app.stack.pop()!.str())! }
+		`d` { app.print_stack()! }
+		`p` { println(app.stack.pop()!.disp()) }
+		`P` { println(app.stack.pop()!.str()) }
+		`t` { println(app.stack.head()!.typ()) }
+		`x` { app.stack.purge() }
+		`q` { return error('quit') }
+		else { app.stack.push(Value.parse(tok) or { return error('bad command') }) }
 	}
 }
 
 fn (mut app App) print_help() {
 	println('Commands:')
-	println('  d  dump stack')
-	println('  p  pop and print top of stack ("P" displays raw values)')
-	println('  t  print type of top of stack')
 	println('  +  add last two stack values, push result to stack')
 	println('  -  subtract last stack values from the one before, push result to stack')
 	println('  *  multiply last two stack values, push result to stack')
 	println('  /  divide last stack value by the one before, push result to stack')
 	println('  !  negate value at top of stack (0=false)')
+	println('  >  pop and store (or to a named variable with ">VAR")')
+	println('  <  fetch and push (or from a named variable with "<VAR")')
 	println('  .  duplicate top of stack')
+	println('  s  swap the top two items on the stack')
 	println('  _  pop and discard top of stack')
 	println('  e  pop and execute top of stack')
+	println('  d  dump stack')
+	println('  p  pop and print top of stack ("P" displays raw values)')
+	println('  t  print type of top of stack')
 	println('  x  clear stack')
 	println('  q  quit')
-	println('All other values are pushed to stack as integers, floats, strings or nil.')
+	println('Other values are pushed to the stack as integers, floats, strings or nil.')
 }
 
 fn (mut app App) debug_info() {

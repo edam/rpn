@@ -46,6 +46,13 @@ fn (mut s Stack) pop() !Value {
 	return val
 }
 
+fn (mut s Stack) swap() ! {
+	val1 := s.pop()!
+	val2 := s.pop()!
+	s.push(val1)
+	s.push(val2)
+}
+
 fn (mut s Stack) head() !Value {
 	unsafe {
 		if s.head == nil {
